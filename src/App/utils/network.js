@@ -1,4 +1,8 @@
-export const GOREST_ROOT = 'https://gorest.co.in/public/v1/users';
+const API_BASE_URL = 'https://gorest.co.in/public/v1';
+const API_USERS = '/users';
+
+export const USERS_URL = API_BASE_URL+API_USERS;
+
 
 export const getApiResource = async (url) => {
     try {

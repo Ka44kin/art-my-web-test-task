@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Col, Row } from 'antd';
-import { useNavigate } from 'react-router-dom';
+    import React, { useEffect, useState } from 'react';
+    import { Table, Col, Row, } from 'antd';
+    import { useNavigate } from 'react-router-dom';
 
-import { getApiResource, GOREST_ROOT } from '../../utils/network';
+    import { getApiResource, USERS_URL } from '../../utils/network';
 
-const Users = () => {
-    const [pagination, setPagination] = useState({});
-    const [userList, setUserList] = useState([]);
-    const navigate = useNavigate();
+    const Users = () => {
+        const [pagination, setPagination] = useState({});
+        const [userList, setUserList] = useState([]);
+        const [error, setError] = useState(null);
+        const [filterGender, setFilterGender] = useState('');
+        const navigate = useNavigate();
 
-    const getResource = async (url) => {
-        try {
+        const getResource = async (url) => {
+            try {
+            setError(null);
             const response = await getApiResource(url);
-            console.log(response);
 
             const list = response.users.map(({ id, name, email, gender, status }) => ({
                 key: id,
@@ -21,29 +23,36 @@ const Users = () => {
                 gender,
                 status,
             }));
-            setUserList(list);
 
-            // Устанавливаем информацию о пагинации
+            setUserList(list);
             setPagination(response.pagination);
-        } catch (error) {
-            console.error(error);
-        }
+            } catch (error) {
+                console.error(error);
+                setError('Failed to fetch data. Please try again.');
+            }
+        };
+
+    const handleTableChange = (pagination, filters) => {
+        const { current } = pagination;
+
+        // Сохраняем значение фильтра в состоянии
+        const filter = filters.gender && filters.gender[0];
+        setFilterGender(filter);
+
+        // Определяем URL для запроса с учетом фильтра гендера и страницы
+        const url = filter ? `${USERS_URL}?gender=${filter}&page=${current}` 
+                           : `${USERS_URL}?page=${current}`;
+
+        getResource(url);
     };
 
-    const handleTableChange = (pagination) => {
-        // Обработчик смены страницы
-        const { current } = pagination;
-        getResource(`${GOREST_ROOT}?page=${current}`);
+    const handleRowClick = (record) => {
+        navigate(`/edit/${record.key}`);
     };
 
     useEffect(() => {
-        getResource(GOREST_ROOT);
+        getResource(USERS_URL);
     }, []);
-
-    const handleRowClick = (record) => {
-        // Обработчик клика на строку пользователя
-        navigate(`/edit/${record.key}`); // Переход на страницу редактирования с id пользователя
-    };
 
     const columns = [
         {
@@ -61,16 +70,16 @@ const Users = () => {
             dataIndex: 'gender',
             key: 'gender',
             filters: [
-                {
-                    text: 'female',
-                    value: 'female',
-                },
-                 {
-                    text: 'male',
-                    value: 'male',
-                },
-            ],
-            onFilter: (value, item) => item.gender === value,
+            {
+                text: 'female',
+                value: 'female',
+            },
+            {
+                text: 'male',
+                value: 'male',
+            },
+        ],
+        onFilter: (value, item) => item.gender === value,
         },
         {
             title: 'Status',
@@ -80,23 +89,23 @@ const Users = () => {
     ];
 
     return (
-        <>
-            <Row>
-                <Col xs={24}>
-                <Table
-                    dataSource={userList}
-                    columns={columns}
-                    pagination={{...pagination, showSizeChanger: false}}
-                    onChange={handleTableChange}
-                    onRow={(record) => ({
-                        onClick: () => handleRowClick(record), // Привязываем обработчик к клику на строку
-                    })}
-                    />
-                </Col>
-            </Row>
-        </>
+    <>
+        <Row>
+            <Col xs={24}>
+            {error && <div style={{ color: 'red' }}>{error}</div>}
+            <Table
+                dataSource={userList}
+                columns={columns}
+                pagination={{ ...pagination, showSizeChanger: false }}
+                onChange={handleTableChange}
+                onRow={(record) => ({
+                onClick: () => handleRowClick(record),
+                })}
+            />
+            </Col>
+        </Row>
+    </>
     );
 };
 
 export default Users;
-

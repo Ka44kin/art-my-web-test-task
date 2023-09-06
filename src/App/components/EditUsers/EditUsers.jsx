@@ -3,38 +3,43 @@ import { useParams } from 'react-router-dom';
 import { Form, Input, Select, Button, Space } from 'antd';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { USERS_URL } from '../../utils/network';
 
 const { Option } = Select;
+const ApiAccessToken = process.env.REACT_APP_API_ACCESS_TOKEN; //К сожалению с API взять токен нельзя(((
 
 const EditUser = () => {
-  const { userId } = useParams();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [userData, setUserData] = useState({});
+    const { userId } = useParams();
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [userData, setUserData] = useState({});
 
-  useEffect(() => {
-    // Ваш запрос для получения данных пользователя
-    fetch(`https://gorest.co.in/public/v1/users/${userId}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setUserData(data.data);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        setError(err);
-        setIsLoading(false);
-      });
-  }, [userId]);
+
+
+    useEffect(() => {
+        // Запрос для получения данных пользователя
+        fetch(`${USERS_URL}/${userId}`)
+          .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to fetch user data');
+          }
+          return response.json();
+          })
+          .then((data) => {
+            setUserData(data.data);
+            setIsLoading(false);
+          })
+          .catch((err) => {
+            setError(err);
+            setIsLoading(false);
+          });
+    }, [userId]);
 
   const onFinish = (values) => {
     // Запрос для обновления данных пользователя
-    const apiUrl = `https://gorest.co.in/public/v1/users/${userId}`;
-    const accessToken = 'Bearer 1e4f0c88f4b74df3107c396c305435f7fbf536122d8486a46f9aafa07a64466f';
+    const apiUrl = `${USERS_URL}/${userId}`;
+    const accessToken = `Bearer ${ApiAccessToken}`;
+
     fetch(apiUrl, {
       method: 'PATCH',
       headers: {
